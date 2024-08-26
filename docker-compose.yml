@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16.2
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ifood
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ifood_reviews
+    ports:
+      - "5432:5432"
+    networks:
+      - ifood-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - ifood-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - ifood-network
+    depends_on:
+      - zookeeper
+
+  druid:
+    image: apache/druid:0.23.0
+    ports:
+      - "8082:8082" # Broker
+      - "8888:8888" # Console
+    environment:
+      - DRUID_XMX=512m
+      - DRUID_XMS=512m
+      - DRUID_MAX_DIRECT_MEMORY_SIZE=512m
+    networks:
+      - ifood-network
+    depends_on:
+      - postgres
+      - kafka
+
+networks:
+  ifood-network:
+    driver: bridge
