@@ -1,5 +1,5 @@
-import com.ifood.reviews.review.Review
-import com.ifood.reviews.review.ReviewRepository
+package com.ifood.reviews.review
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -48,5 +48,11 @@ class ReviewService(
 
     suspend fun getReviewById(reviewId: UUID): Review? = withContext(Dispatchers.IO) {
         reviewRepository.findById(reviewId).orElse(null)
+    }
+
+    suspend fun getReviewByOrderId(orderId: UUID): Review? {
+        return withContext(Dispatchers.IO) {
+            reviewRepository.findByOrderId(orderId)
+        }.orElse(null)
     }
 }

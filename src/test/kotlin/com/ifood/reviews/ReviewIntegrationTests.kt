@@ -1,5 +1,6 @@
 import com.ifood.reviews.Application
 import com.ifood.reviews.review.Review
+import com.ifood.reviews.review.ReviewService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull

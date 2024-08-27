@@ -1,7 +1,7 @@
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/ifood_reviews
+      uri: mongodb://root:example@localhost:27017/ifood_reviews?authSource=admin
       database: ifood_reviews
   datasource:
     url: jdbc:postgresql://localhost:5432/ifood_reviews
@@ -14,5 +14,3 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
-  kafka:
-    bootstrap-servers: localhost:9092

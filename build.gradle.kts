@@ -20,9 +20,6 @@ dependencies {
     // JPA para persistência de dados
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-    // Kafka para integração com Apache Kafka
-    implementation("org.springframework.kafka:spring-kafka")
-
     // PostgreSQL Driver para conexão com o banco de dados
     implementation("org.postgresql:postgresql")
 
@@ -40,6 +37,7 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:1.18.0")
     testImplementation("org.testcontainers:postgresql:1.18.0")
     testImplementation("org.testcontainers:kafka:1.18.0")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // Suporte para testes com Kafka embutido
     testImplementation("org.springframework.kafka:spring-kafka-test")
