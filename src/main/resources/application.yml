@@ -1,4 +1,8 @@
 spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/ifood_reviews
+      database: ifood_reviews
   datasource:
     url: jdbc:postgresql://localhost:5432/ifood_reviews
     username: ifood

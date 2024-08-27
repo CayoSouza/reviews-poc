@@ -1,71 +1,52 @@
-
-import com.ifood.reviews.kafka.ReviewKafkaProducer
 import com.ifood.reviews.review.Review
-import com.ifood.reviews.review.ReviewEvent
 import com.ifood.reviews.review.ReviewRepository
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Service
 class ReviewService(
     private val reviewRepository: ReviewRepository,
-    private val kafkaProducer: ReviewKafkaProducer,
-    private val druidService: DruidService
+    private val mongoTemplate: MongoTemplate
 ) {
 
     private val logger = LoggerFactory.getLogger(ReviewService::class.java)
 
-    suspend fun createReview(review: Review): Review = coroutineScope {
+    @Transactional // Ensures the whole method is run as a single transaction
+    suspend fun createReview(review: Review): Review = withContext(Dispatchers.IO) {
         // Ensure order has not been reviewed before proceeding
         reviewRepository.findByOrderId(review.orderId).ifPresent {
             throw IllegalArgumentException("Order has already been reviewed")
         }
 
-        // Launch both operations in parallel using async
-        val saveReviewAsync = async {
-            reviewRepository.save(review).also {
-                logger.info("Review saved successfully in PostgreSQL with reviewId: ${it.reviewId}")
-            }
+        // Save the review to PostgreSQL
+        val savedReview = reviewRepository.save(review).also {
+            logger.info("Review saved successfully in PostgreSQL with reviewId: ${it.reviewId}")
         }
 
-        val sendKafkaAsync = async {
-            try {
-                kafkaProducer.sendReview(review.toEvent())
-                logger.info("Review sent successfully to Kafka with reviewId: ${review.reviewId}")
-            } catch (ex: Exception) {
-                logger.error("Failed to send review to Kafka for reviewId: ${review.reviewId}", ex)
-                throw ex
-            }
+        // Save the review to MongoDB
+        mongoTemplate.save(savedReview).also {
+            logger.info("Review saved successfully in MongoDB with reviewId: ${it.reviewId}")
         }
 
-        // Await both operations
-        val savedReview = saveReviewAsync.await()
-        sendKafkaAsync.await()
-
-        // Return saved review after both operations are complete
+        // Return the saved review
         savedReview
     }
 
-    fun calculateAverageStars(restaurantId: UUID): Double {
-        return druidService.getAverageStars(restaurantId)
+    suspend fun calculateAverageStars(restaurantId: UUID): Double = withContext(Dispatchers.IO) {
+        val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
+        val reviews = mongoTemplate.find(query, Review::class.java)
+        val totalStars = reviews.sumOf { it.stars }
+        if (reviews.isNotEmpty()) totalStars.toDouble() / reviews.size else 0.0
     }
 
-    fun getReviewById(reviewId: UUID): Review? {
-        return reviewRepository.findById(reviewId).orElse(null)
-    }
-
-    private fun Review.toEvent(): ReviewEvent {
-        return ReviewEvent(
-            reviewId = this.reviewId!!,
-            orderId = this.orderId,
-            userId = this.userId,
-            restaurantId = this.restaurantId,
-            stars = this.stars,
-            comment = this.comment,
-            date = this.date
-        )
+    suspend fun getReviewById(reviewId: UUID): Review? = withContext(Dispatchers.IO) {
+        reviewRepository.findById(reviewId).orElse(null)
     }
 }
