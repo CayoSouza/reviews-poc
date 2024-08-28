@@ -31,7 +31,7 @@ class ReviewIntegrationTests {
 
         // MongoDB container
         @Container
-        val mongo = MongoDBContainer(DockerImageName.parse("mongo:5.0")).apply {
+        val mongo = MongoDBContainer(DockerImageName.parse("mongo:6.0")).apply {
             withExposedPorts(27017)
         }
 
@@ -62,9 +62,11 @@ class ReviewIntegrationTests {
             comment = "Great food!"
         )
 
+        // Save review in PostgreSQL and MongoDB
         val savedReview = reviewService.createReview(review)
         assertNotNull(savedReview)
 
+        // Retrieve the review from PostgreSQL
         val retrievedReview = reviewService.getReviewById(savedReview.reviewId!!)
         assertEquals(savedReview, retrievedReview)
     }
@@ -91,5 +93,36 @@ class ReviewIntegrationTests {
         val averageStars = reviewService.calculateAverageStars(restaurantId)
 
         assertEquals(expectedAverage, averageStars)
+    }
+
+    @Test
+    fun `should get review by orderId`() = runBlocking {
+        val review = Review(
+            orderId = UUID.randomUUID(),
+            userId = UUID.randomUUID(),
+            restaurantId = UUID.randomUUID(),
+            stars = 5,
+            comment = "Amazing service!"
+        )
+
+        // Save the review
+        val savedReview = reviewService.createReview(review)
+        assertNotNull(savedReview)
+
+        // Retrieve the review by orderId
+        val retrievedReview = reviewService.getReviewByOrderId(savedReview.orderId)
+        assertNotNull(retrievedReview)
+        assertEquals(savedReview, retrievedReview)
+    }
+
+    @Test
+    fun `should calculate average stars for a restaurant with no reviews`() = runBlocking {
+        val restaurantId = UUID.randomUUID()
+
+        // Calculate the average stars for a restaurant with no reviews
+        val averageStars = reviewService.calculateAverageStars(restaurantId)
+
+        // Expect the average to be 0.0 when there are no reviews
+        assertEquals(0.0, averageStars)
     }
 }

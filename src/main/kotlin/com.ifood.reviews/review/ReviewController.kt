@@ -35,10 +35,24 @@ class ReviewController(
     }
 
     // Get average stars for a restaurant by restaurantId
-    @GetMapping("/restaurant/{restaurantId}/average-stars")
+    @GetMapping("/restaurant/{restaurantId}/average")
     suspend fun getAverageStarsByRestaurant(@PathVariable restaurantId: UUID): ResponseEntity<Double> {
         logger.info("[MongoDB] Received request to get average stars for restaurantId: $restaurantId")
         val averageStars = reviewService.calculateAverageStars(restaurantId)
         return ResponseEntity.ok(averageStars)
+    }
+
+    // Get paginated reviews for a restaurant by restaurantId
+    @GetMapping("/restaurant/{restaurantId}")
+    suspend fun getReviewsByRestaurantId(
+        @PathVariable restaurantId: UUID,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int
+    ): ResponseEntity<List<Review>> {
+        logger.info("[PostgreSQL] Received request to get paginated reviews for restaurantId: $restaurantId")
+
+        val paginatedReviews = reviewService.getReviewsByRestaurantId(restaurantId, page, size)
+
+        return ResponseEntity.ok(paginatedReviews)
     }
 }
