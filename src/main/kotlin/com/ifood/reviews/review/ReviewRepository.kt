@@ -17,4 +17,10 @@ interface ReviewRepository : JpaRepository<Review, UUID> {
         @Param("restaurantId") restaurantId: UUID,
         pageable: Pageable
     ): List<Review>
+
+    @Query("SELECT AVG(r.stars) FROM Review r WHERE r.restaurantId = :restaurantId")
+    fun calculateAverageStarsPostgres(restaurantId: UUID): Double?
+
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.restaurantId = :restaurantId")
+    fun countReviewsByRestaurantId(restaurantId: UUID): Long
 }

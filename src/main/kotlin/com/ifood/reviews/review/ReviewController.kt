@@ -38,10 +38,13 @@ class ReviewController(
 
     // Get average stars for a restaurant by restaurantId
     @GetMapping("/restaurant/{restaurantId}/average")
-    suspend fun getAverageStarsByRestaurant(@PathVariable restaurantId: UUID): ResponseEntity<Double> {
-        logger.info("[MongoDB] Received request to get average stars for restaurantId: $restaurantId")
-        val averageStars = reviewService.calculateAverageStars(restaurantId)
-        return ResponseEntity.ok(averageStars)
+    suspend fun getAverageStars(
+        @PathVariable restaurantId: UUID,
+        @RequestParam(defaultValue = "true") useNoSql: Boolean
+    ): Map<String, Any> {
+        logger.info("[NoSQL=$useNoSql] Received request to get average stars for restaurantId: $restaurantId")
+        val averageStars = reviewService.calculateAverageStars(restaurantId, useNoSql)
+        return mapOf("restaurantId" to restaurantId, "averageStars" to averageStars, "useNoSql" to useNoSql)
     }
 
     // Get paginated reviews for a restaurant by restaurantId
@@ -59,9 +62,13 @@ class ReviewController(
     }
 
     @GetMapping("/restaurant/{restaurantId}/count")
-    suspend fun countReviewsByRestaurantId(@PathVariable restaurantId: UUID): ResponseEntity<Long> {
-        logger.info("[MongoDB] Received request to count reviews for restaurantId: $restaurantId")
-        val count = reviewService.countReviewsByRestaurantId(restaurantId)
+    suspend fun countReviewsByRestaurantId(
+        @PathVariable restaurantId: UUID,
+        @RequestParam(defaultValue = "true") useNoSql: Boolean
+    ): ResponseEntity<Long> {
+        val dataSource = if (useNoSql) "[MongoDB]" else "[PostgreSQL]"
+        logger.info("$dataSource Received request to count reviews for restaurantId: $restaurantId")
+        val count = reviewService.countReviewsByRestaurantId(restaurantId, useNoSql)
         return ResponseEntity.ok(count)
     }
 }

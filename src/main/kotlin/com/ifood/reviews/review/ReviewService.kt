@@ -36,12 +36,31 @@ class ReviewService(
         savedReview
     }
 
-    suspend fun calculateAverageStars(restaurantId: UUID): Double = withContext(Dispatchers.IO) {
-        val query = org.springframework.data.mongodb.core.query.Query(org.springframework.data.mongodb.core.query.Criteria.where("restaurantId").`is`(restaurantId))
+    suspend fun calculateAverageStars(restaurantId: UUID, useNoSql: Boolean): Double = withContext(Dispatchers.IO) {
+        if (useNoSql) calculateAverageStarsMongo(restaurantId)
+        else calculateAverageStarsPostgres(restaurantId)
+    }
+
+
+    private fun calculateAverageStarsMongo(restaurantId: UUID): Double {
+        logger.info("Calculating average in MongoDB for restaurantId: $restaurantId")
+        val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
         val reviews = mongoTemplate.find(query, Review::class.java)
         val totalStars = reviews.sumOf { it.stars }
-        if (reviews.isNotEmpty()) totalStars.toDouble() / reviews.size else 0.0
+        return if (reviews.isNotEmpty()) totalStars.toDouble() / reviews.size else 0.0
     }
+
+    private fun calculateAverageStarsPostgres(restaurantId: UUID): Double {
+        logger.info("Calculating average in PostgreSQL for restaurantId: $restaurantId")
+        return reviewRepository.calculateAverageStarsPostgres(restaurantId) ?: 0.0
+    }
+
+//    suspend fun calculateAverageStars(restaurantId: UUID): Double = withContext(Dispatchers.IO) {
+//        val query = org.springframework.data.mongodb.core.query.Query(org.springframework.data.mongodb.core.query.Criteria.where("restaurantId").`is`(restaurantId))
+//        val reviews = mongoTemplate.find(query, Review::class.java)
+//        val totalStars = reviews.sumOf { it.stars }
+//        if (reviews.isNotEmpty()) totalStars.toDouble() / reviews.size else 0.0
+//    }
 
     suspend fun getReviewById(reviewId: UUID): Review? = withContext(Dispatchers.IO) {
         reviewRepository.findById(reviewId).orElse(null)
@@ -61,5 +80,24 @@ class ReviewService(
     fun countReviewsByRestaurantId(restaurantId: UUID): Long {
         val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
         return mongoTemplate.count(query, Review::class.java)
+    }
+
+    suspend fun countReviewsByRestaurantId(restaurantId: UUID, useNoSql: Boolean): Long {
+        return if (useNoSql) {
+            countReviewsByRestaurantIdMongo(restaurantId)
+        } else {
+            countReviewsByRestaurantIdPostgres(restaurantId)
+        }
+    }
+
+    private fun countReviewsByRestaurantIdMongo(restaurantId: UUID): Long {
+        logger.info("Calculating count in MongoDB for restaurantId: $restaurantId")
+        val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
+        return mongoTemplate.count(query, Review::class.java)
+    }
+
+    private fun countReviewsByRestaurantIdPostgres(restaurantId: UUID): Long {
+        logger.info("Calculating count in PostgreSQL for restaurantId: $restaurantId")
+        return reviewRepository.countReviewsByRestaurantId(restaurantId)
     }
 }
