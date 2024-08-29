@@ -52,25 +52,35 @@ docker-compose up -d
 ### Curls
 
 ```text
+Create a New Review:
 curl -X POST http://localhost:8080/api/reviews \
-  -H "Content-Type: application/json" \
-  -d '{
-        "orderId": "d9b2d63d-cb57-4c0a-8e8a-bb25b6f3f2b4",
-        "userId": "a1f5e731-8774-42f2-bdcb-57db0edda62e",
-        "restaurantId": "bcdf1d47-cfbb-4c0e-8f84-b7314e2d8e45",
-        "stars": 5,
-        "comment": "Great food!"
-      }'
+-H "Content-Type: application/json" \
+-d '{
+  "orderId": "example-order-id",
+  "userId": "example-user-id",
+  "restaurantId": "example-restaurant-id",
+  "stars": 5,
+  "comment": "This is a review comment."
+}'
+
+Get a Review by Order ID:
+curl -X GET http://localhost:8080/api/reviews/order/{orderId}
+
+Get Average Stars for a Restaurant by Restaurant ID (MongoDB):
+curl -X GET "http://localhost:8080/api/reviews/restaurant/{restaurantId}/average?useNoSql=true"
+
+Get Average Stars for a Restaurant by Restaurant ID (PostgreSQL):
+curl -X GET "http://localhost:8080/api/reviews/restaurant/{restaurantId}/average?useNoSql=false"
+
+Get Paginated Reviews for a Restaurant by Restaurant ID:
+curl -X GET "http://localhost:8080/api/reviews/restaurant/{restaurantId}?page=0&size=10"
+
+Count Reviews by Restaurant ID (MongoDB):
+curl -X GET "http://localhost:8080/api/reviews/restaurant/{restaurantId}/count?useNoSql=true"
+
+Count Reviews by Restaurant ID (PostgreSQL):
+curl -X GET "http://localhost:8080/api/reviews/restaurant/{restaurantId}/count?useNoSql=false"
 ```
-
-```text
-curl -X GET http://localhost:8080/api/reviews/average/{restaurantId}
-```
-
-## K6 Performance Report
-
-[50VUs](k6/summary-50VUs-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
-
 
 ### MEDIÇÕES DO SLA
 
