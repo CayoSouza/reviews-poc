@@ -117,23 +117,23 @@ Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite 
 
 ### Extra Performance Measurements
 
-1.130.103 reviews latency (restaurant: e3b0c442-98fc-1fc1-9fd3-256e9df06d69):
+10.000.000 reviews latency:
 
 MongoDB
 ```text
-count: 350 ms
+count: 2 s
 average: 15 s
 ```
 
 Postgres
 ```text
-count: 35 ms
-average: 40 ms
+count: 250 ms
+average: 270 ms
 ```
 
 ## Possible Improvements
 
 - **Caching:** Implement caching mechanisms to reduce the number of requests to the database.
 - **Message Queues:** Use message queues to make review creation faster, more scalable and resilient.
-- **MongoDB indexing:** Create indexes in MongoDB to improve the performance of aggregations.
+- **Indexing:** Create indexes in both Postgres and MongoDB to improve the performance of aggregations.
 - **Increase connection pool:** Increase the connection pool size to handle more concurrent requests.

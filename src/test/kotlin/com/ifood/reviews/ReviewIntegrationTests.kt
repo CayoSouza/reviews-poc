@@ -1,6 +1,7 @@
+
 import com.ifood.reviews.Application
-import com.ifood.reviews.review.Review
-import com.ifood.reviews.review.ReviewService
+import com.ifood.reviews.review.model.ReviewDTO
+import com.ifood.reviews.review.service.ReviewService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -54,7 +55,7 @@ class ReviewIntegrationTests {
 
     @Test
     fun `should create and retrieve a review`() = runBlocking {
-        val review = Review(
+        val reviewDTO = ReviewDTO(
             orderId = UUID.randomUUID(),
             userId = UUID.randomUUID(),
             restaurantId = UUID.randomUUID(),
@@ -63,11 +64,11 @@ class ReviewIntegrationTests {
         )
 
         // Save review in PostgreSQL and MongoDB
-        val savedReview = reviewService.createReview(review)
+        val savedReview = reviewService.createReview(reviewDTO)
         assertNotNull(savedReview)
 
         // Retrieve the review from PostgreSQL
-        val retrievedReview = reviewService.getReviewById(savedReview.reviewId!!)
+        val retrievedReview = reviewService.getReviewByOrderId(savedReview.orderId)
         assertEquals(savedReview, retrievedReview)
     }
 
@@ -78,26 +79,26 @@ class ReviewIntegrationTests {
         // Create 10 reviews with varying stars for the same restaurant
         val stars = listOf(5, 4, 3, 5, 4, 3, 2, 1, 5, 4)
         stars.forEachIndexed { index, star ->
-            val review = Review(
+            val reviewDTO = ReviewDTO(
                 orderId = UUID.randomUUID(),
                 userId = UUID.randomUUID(),
                 restaurantId = restaurantId,
                 stars = star,
                 comment = "Review ${index + 1}"
             )
-            reviewService.createReview(review)
+            reviewService.createReview(reviewDTO)
         }
 
         // Calculate the average stars from MongoDB
         val expectedAverage = stars.average()
-        val averageStars = reviewService.calculateAverageStars(restaurantId)
+        val averageStars = reviewService.calculateAverageStars(restaurantId, useNoSql = true)
 
         assertEquals(expectedAverage, averageStars)
     }
 
     @Test
     fun `should get review by orderId`() = runBlocking {
-        val review = Review(
+        val reviewDTO = ReviewDTO(
             orderId = UUID.randomUUID(),
             userId = UUID.randomUUID(),
             restaurantId = UUID.randomUUID(),
@@ -106,7 +107,7 @@ class ReviewIntegrationTests {
         )
 
         // Save the review
-        val savedReview = reviewService.createReview(review)
+        val savedReview = reviewService.createReview(reviewDTO)
         assertNotNull(savedReview)
 
         // Retrieve the review by orderId
@@ -120,7 +121,7 @@ class ReviewIntegrationTests {
         val restaurantId = UUID.randomUUID()
 
         // Calculate the average stars for a restaurant with no reviews
-        val averageStars = reviewService.calculateAverageStars(restaurantId)
+        val averageStars = reviewService.calculateAverageStars(restaurantId, useNoSql = true)
 
         // Expect the average to be 0.0 when there are no reviews
         assertEquals(0.0, averageStars)

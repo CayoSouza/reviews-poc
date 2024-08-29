@@ -1,13 +1,14 @@
-package com.ifood.reviews.review
+package com.ifood.reviews.review.model
 
 import jakarta.persistence.*
+import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
 
 @Entity
 @Table(name = "reviews")
 data class Review(
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO) // or GenerationType.IDENTITY
     val reviewId: UUID? = null,
 
     @Column(nullable = false)
@@ -28,7 +29,7 @@ data class Review(
     @Column(nullable = false)
     val date: Date = Date()
 ) {
-    // Construtor sem argumentos para JPA
+    // No-argument constructor required by JPA
     protected constructor() : this(
         reviewId = null,
         orderId = UUID.randomUUID(),
@@ -39,3 +40,18 @@ data class Review(
         date = Date()
     )
 }
+
+
+@Document(collection = "reviews")
+data class MongoReview(
+    @Id
+    val reviewId: String? = null,
+
+    val orderId: String,
+    val userId: String,
+    val restaurantId: String,
+    val stars: Int,
+    val comment: String? = null,
+    val date: Date = Date()
+)
+

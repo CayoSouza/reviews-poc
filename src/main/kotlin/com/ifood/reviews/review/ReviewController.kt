@@ -1,5 +1,8 @@
-package com.ifood.reviews.review
+package com.ifood.reviews.review.controller
 
+import com.ifood.reviews.review.model.Review
+import com.ifood.reviews.review.model.ReviewDTO
+import com.ifood.reviews.review.service.ReviewService
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -17,9 +20,9 @@ class ReviewController(
 
     // Create a new review
     @PostMapping
-    suspend fun createReview(@Valid @RequestBody review: Review): ResponseEntity<Review> {
+    suspend fun createReview(@Valid @RequestBody reviewDTO: ReviewDTO): ResponseEntity<Review> {
         logger.info("Received request to create review")
-        val savedReview = reviewService.createReview(review)
+        val savedReview = reviewService.createReview(reviewDTO)
         val location = URI.create("/api/reviews/${savedReview.reviewId}")
         return ResponseEntity.created(location).body(savedReview)
     }
@@ -27,7 +30,7 @@ class ReviewController(
     // Get a review by orderId
     @GetMapping("/order/{orderId}")
     suspend fun getReviewByOrderId(@PathVariable orderId: UUID): ResponseEntity<Review?> {
-        logger.info("[PostgresSQL] Received request to get review for orderId: $orderId")
+        logger.info("[PostgreSQL] Received request to get review for orderId: $orderId")
         val review = reviewService.getReviewByOrderId(orderId)
         return if (review != null) {
             ResponseEntity.ok(review)

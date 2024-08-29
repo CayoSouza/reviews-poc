@@ -16,8 +16,8 @@ const RESTAURANT_ID = "e3b0c442-98fc-1fc1-9fd3-256e9df06d05";
 
 export let options = {
     stages: [
-        { duration: '30s', target: 55 },  // ramp up to 50 users
-        { duration: '1m', target: 55 },   // stay at 50 users for 1 minute
+        { duration: '30s', target: 150 },  // ramp up to 50 users
+        { duration: '1m', target: 150 },   // stay at 50 users for 1 minute
         { duration: '30s', target: 0 },   // ramp down to 0 users
     ],
     thresholds: {
