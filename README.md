@@ -119,3 +119,10 @@ Postgres
 count: 35 ms
 average: 40 ms
 ```
+
+## Possible Improvements
+
+- **Caching:** Implement caching mechanisms to reduce the number of requests to the database.
+- **Message Queues:** Use message queues to make review creation faster, more scalable and resilient.
+- **MongoDB indexing:** Create indexes in MongoDB to improve the performance of aggregations.
+- **Increase connection pool:** Increase the connection pool size to handle more concurrent requests.
