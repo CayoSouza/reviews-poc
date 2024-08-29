@@ -70,3 +70,9 @@ curl -X GET http://localhost:8080/api/reviews/average/{restaurantId}
 ## K6 Performance Report
 
 [50VUs](k6/summary-50VUs-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
+
+1.130.103 reviews latency (restaurant: e3b0c442-98fc-1fc1-9fd3-256e9df06d69):
+
+count: 350ms
+
+average: 17s
