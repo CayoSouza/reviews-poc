@@ -1,0 +1,14 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://root:example@localhost:27017/ifood_reviews?authSource=admin
+      database: ifood_reviews
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ifood_reviews
+    username: ifood
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
