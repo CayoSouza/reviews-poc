@@ -74,7 +74,8 @@ curl -X GET http://localhost:8080/api/reviews/average/{restaurantId}
 
 ### MEDIÇÕES DO SLA
 
-[50VUs - create_review](k6/50VUs/createReview-summary-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
+[50VUs - create_review - success](k6/50VUs/createReview-summary-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
+[55VUs - create_review - failed](k6/failed/createReview-summary-55VUs-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
 ```text
 Tipo de operações: inserção
 Arquivos envolvidos (lista de Arquivos c/ os links contidos no repositório que estejam envolvidos na implementação do serviço 1)
