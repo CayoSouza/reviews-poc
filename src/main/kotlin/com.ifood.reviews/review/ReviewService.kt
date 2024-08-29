@@ -5,6 +5,8 @@ import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -54,5 +56,10 @@ class ReviewService(
     suspend fun getReviewsByRestaurantId(restaurantId: UUID, page: Int, size: Int): List<Review> = withContext(Dispatchers.IO) {
         val pageable = PageRequest.of(page, size)
         reviewRepository.findPaginatedByRestaurantId(restaurantId, pageable)
+    }
+
+    fun countReviewsByRestaurantId(restaurantId: UUID): Long {
+        val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
+        return mongoTemplate.count(query, Review::class.java)
     }
 }

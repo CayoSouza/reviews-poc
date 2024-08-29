@@ -4,6 +4,7 @@ import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URI
 import java.util.*
 
 @RestController
@@ -19,7 +20,8 @@ class ReviewController(
     suspend fun createReview(@Valid @RequestBody review: Review): ResponseEntity<Review> {
         logger.info("Received request to create review")
         val savedReview = reviewService.createReview(review)
-        return ResponseEntity.ok(savedReview)
+        val location = URI.create("/api/reviews/${savedReview.reviewId}")
+        return ResponseEntity.created(location).body(savedReview)
     }
 
     // Get a review by orderId
@@ -54,5 +56,12 @@ class ReviewController(
         val paginatedReviews = reviewService.getReviewsByRestaurantId(restaurantId, page, size)
 
         return ResponseEntity.ok(paginatedReviews)
+    }
+
+    @GetMapping("/restaurant/{restaurantId}/count")
+    suspend fun countReviewsByRestaurantId(@PathVariable restaurantId: UUID): ResponseEntity<Long> {
+        logger.info("[MongoDB] Received request to count reviews for restaurantId: $restaurantId")
+        val count = reviewService.countReviewsByRestaurantId(restaurantId)
+        return ResponseEntity.ok(count)
     }
 }
