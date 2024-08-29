@@ -76,3 +76,35 @@ curl -X GET http://localhost:8080/api/reviews/average/{restaurantId}
 count: 350ms
 
 average: 17s
+
+
+### MEDIÇÕES DO SLA
+
+[50VUs - create_review](k6/50VUs/createReview-summary-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
+```text
+Tipo de operações: inserção
+Arquivos envolvidos (lista de Arquivos c/ os links contidos no repositório que estejam envolvidos na implementação do serviço 1)
+Data da medição: 28/08/2024
+Descrição das configurações (máquinas/containers utilizadas para o sistema funcionar, ...)
+image: mongo:6.0
+image: postgres:16.2
+Core i5-13600KF
+Memory Limit: 15.54GiB
+RTX 4070 Ti
+Potenciais gargalos do sistema: mais de 50 usuarios em concorrencia por limite de pool de conexoes, média de milhoes de reviews demoram dezenas de segundos para serem retornados.
+```
+
+[50-100-200VUs - get_review](k6/200VUs/getReview-summary2-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
+```text
+Tipo de operações: leitura
+Arquivos envolvidos (lista de Arquivos c/ os links contidos no repositório que estejam envolvidos na implementação do serviço 2)
+Data da medição: 28/08/2024
+Descrição das configurações (máquinas/containers utilizadas para o sistema funcionar, ...)
+image: mongo:6.0
+image: postgres:16.2
+Core i5-13600KF
+Memory Limit: 15.54GiB
+RTX 4070 Ti
+Testes de carga (SLA): latência, vazão e concorrência (limite de requisições simultâneas)
+Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite de CPU, média de milhoes de reviews demoram dezenas de segundos para serem retornados.
+```
