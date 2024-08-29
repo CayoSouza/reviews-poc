@@ -12,12 +12,12 @@ function generateUUID() {
     });
 }
 
-const RESTAURANT_ID = "e3b0c442-98fc-1fc1-9fd3-256e9df06d04";
+const RESTAURANT_ID = "e3b0c442-98fc-1fc1-9fd3-256e9df06d05";
 
 export let options = {
     stages: [
-        { duration: '30s', target: 60 },  // ramp up to 70 users
-        { duration: '1m', target: 60 },   // stay at 70 users for 1 minute
+        { duration: '30s', target: 50 },  // ramp up to X users
+        { duration: '1m', target: 50 },   // stay at X users for 1 minute
         { duration: '30s', target: 0 },   // ramp down to 0 users
     ],
     thresholds: {
