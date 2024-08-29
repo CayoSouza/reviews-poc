@@ -71,19 +71,6 @@ curl -X GET http://localhost:8080/api/reviews/average/{restaurantId}
 
 [50VUs](k6/summary-50VUs-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
 
-1.130.103 reviews latency (restaurant: e3b0c442-98fc-1fc1-9fd3-256e9df06d69):
-
-MongoDB
-```text
-count: 350ms
-average: 15s
-```
-
-Postgres
-```text
-count: 350ms
-average: 15s
-```
 
 ### MEDIÇÕES DO SLA
 
@@ -114,4 +101,21 @@ Memory Limit: 15.54GiB
 RTX 4070 Ti
 Testes de carga (SLA): latência, vazão e concorrência (limite de requisições simultâneas)
 Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite de CPU (atingiu 100%), média de milhoes de reviews demoram dezenas de segundos para serem retornados.
+```
+
+
+### Extra Performance Measurements
+
+1.130.103 reviews latency (restaurant: e3b0c442-98fc-1fc1-9fd3-256e9df06d69):
+
+MongoDB
+```text
+count: 350 ms
+average: 15 s
+```
+
+Postgres
+```text
+count: 35 ms
+average: 40 ms
 ```
