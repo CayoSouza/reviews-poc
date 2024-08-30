@@ -123,13 +123,13 @@ Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite 
 
 ### 1M reviews latency
 
-MongoDB
+MongoDB (with restaurantId index)
 ```text
 count: 200 ms
 average: 700 ms
 ```
 
-Postgres
+Postgres (with restaurantId index)
 ```text
 count: 45 ms
 average: 48 ms
@@ -137,13 +137,13 @@ average: 48 ms
 
 ### 10M reviews latency
 
-MongoDB
+MongoDB (with restaurantId index)
 ```text
 count: 1950 ms
 average: 7000 ms
 ```
 
-Postgres
+Postgres (with restaurantId index)
 ```text
 count: 300 ms
 average: 350 ms
