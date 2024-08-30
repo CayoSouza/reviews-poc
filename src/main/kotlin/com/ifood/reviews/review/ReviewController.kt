@@ -4,6 +4,7 @@ import com.ifood.reviews.review.model.Review
 import com.ifood.reviews.review.model.ReviewDTO
 import com.ifood.reviews.review.service.ReviewService
 import jakarta.validation.Valid
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -73,5 +74,19 @@ class ReviewController(
         logger.info("$dataSource Received request to count reviews for restaurantId: $restaurantId")
         val count = reviewService.countReviewsByRestaurantId(restaurantId, useNoSql)
         return ResponseEntity.ok(count)
+    }
+
+    @PostMapping("/generate")
+    suspend fun generateFakeReviews(
+        @RequestParam restaurantId: UUID,
+        @RequestParam numberOfReviews: Int
+    ): ResponseEntity<Map<String, Any>> = runBlocking {
+        reviewService.generateFakeReviews(restaurantId, numberOfReviews)
+        val response = mapOf(
+            "message" to "Successfully generated $numberOfReviews reviews for restaurant $restaurantId",
+            "restaurantId" to restaurantId,
+            "numberOfReviews" to numberOfReviews
+        )
+        ResponseEntity.ok(response)
     }
 }

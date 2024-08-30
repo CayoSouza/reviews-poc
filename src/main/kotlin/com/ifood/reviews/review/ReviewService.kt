@@ -5,6 +5,8 @@ import com.ifood.reviews.review.model.Review
 import com.ifood.reviews.review.model.ReviewDTO
 import com.ifood.reviews.review.repository.PostgresReviewRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
@@ -15,6 +17,7 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+
 
 @Service
 class ReviewService(
@@ -102,4 +105,51 @@ class ReviewService(
     }
 
     data class AverageStarsResult(val averageStars: Double)
+
+    @Transactional
+    fun generateFakeReviews(restaurantId: UUID, numberOfReviews: Int) {
+        runBlocking {
+            val batchSize = 500 // Adjust batch size as needed
+            val batches = numberOfReviews / batchSize
+
+            // Parallel processing using coroutines
+            val jobs = List(batches) { batch ->
+                launch(Dispatchers.IO) {
+                    val reviews = mutableListOf<Review>()
+                    val mongoReviews = mutableListOf<MongoReview>()
+                    repeat(batchSize) {
+                        val review = Review(
+                            orderId = UUID.randomUUID(),
+                            userId = UUID.randomUUID(),
+                            restaurantId = restaurantId,
+                            stars = (1..5).random(),
+                            comment = "Random review",
+                            date = Date()
+                        )
+                        reviews.add(review)
+
+                        val mongoReview = MongoReview(
+                            reviewId = review.reviewId.toString(),
+                            orderId = review.orderId.toString(),
+                            userId = review.userId.toString(),
+                            restaurantId = review.restaurantId.toString(),
+                            stars = review.stars,
+                            comment = review.comment,
+                            date = review.date
+                        )
+                        mongoReviews.add(mongoReview)
+                    }
+
+                    // Batch insert into PostgreSQL
+                    postgresReviewRepository.saveAll(reviews)
+
+                    // Batch insert into MongoDB
+                    mongoTemplate.insertAll(mongoReviews)
+                }
+            }
+            jobs.forEach { it.join() } // Wait for all coroutines to complete
+        }
+    }
+
+
 }
