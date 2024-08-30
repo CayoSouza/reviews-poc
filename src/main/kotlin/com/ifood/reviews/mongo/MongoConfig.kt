@@ -25,7 +25,7 @@ class MongoConfig {
             .uuidRepresentation(UuidRepresentation.STANDARD)
             .applyToConnectionPoolSettings { builder ->
                 builder
-                    .maxSize(151) // Set the maximum size of the connection pool
+                    .maxSize(201) // Set the maximum size of the connection pool
                     .minSize(10) // Set the minimum size of the connection pool
                     .maxWaitTime(30000, TimeUnit.MILLISECONDS) // Set the maximum wait time for a connection
             }

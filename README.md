@@ -84,8 +84,8 @@ curl -X GET "http://localhost:8080/api/reviews/restaurant/{restaurantId}/count?u
 
 ### MEDIÇÕES DO SLA
 
-[50VUs - create_review - success](k6/50VUs/createReview-summary-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
-[55VUs - create_review - failed](k6/failed/createReview-summary-55VUs-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
+[150VUs - create_review - success](k6/150VUs/createReview-summary-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
+[200VUs - create_review - failed](k6/failed/createReview-200VUs-summary-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
 ```text
 Tipo de operações: inserção
 Arquivos envolvidos (lista de Arquivos c/ os links contidos no repositório que estejam envolvidos na implementação do serviço 1)
@@ -96,7 +96,7 @@ image: postgres:16.2
 Core i5-13600KF
 Memory Limit: 15.54GiB
 RTX 4070 Ti
-Potenciais gargalos do sistema: mais de 50 usuarios em concorrencia por limite de pool de conexoes, média de milhoes de reviews demoram dezenas de segundos para serem retornados.
+Potenciais gargalos do sistema: mais de 150 usuarios em concorrencia por limite de pool de conexoes (scaling horizontal e/ou vertical necessario)
 ```
 
 [50-100-200VUs - get_review](k6/200VUs/getReview-summary2-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
@@ -111,29 +111,44 @@ Core i5-13600KF
 Memory Limit: 15.54GiB
 RTX 4070 Ti
 Testes de carga (SLA): latência, vazão e concorrência (limite de requisições simultâneas)
-Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite de CPU (atingiu 100%), média de milhoes de reviews demoram dezenas de segundos para serem retornados.
+Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite de CPU (atingiu 100%, scaling horizontal e/ou vertical necessario)
 ```
 
 
-### Extra Performance Measurements
+## Extra Performance Measurements (after restaurant indexes + more 10M+ rows of data in the database)
 
-10.000.000 reviews latency:
+### 1M reviews latency
 
 MongoDB
 ```text
-count: 2 s
-average: 15 s
+count: 200 ms
+average: 700 ms
 ```
 
 Postgres
 ```text
-count: 250 ms
-average: 270 ms
+count: 45 ms
+average: 48 ms
+```
+
+### 10M reviews latency
+
+MongoDB
+```text
+count: 1950 ms
+average: 7000 ms
+```
+
+Postgres
+```text
+count: 300 ms
+average: 350 ms
 ```
 
 ## Possible Improvements
 
 - **Caching:** Implement caching mechanisms to reduce the number of requests to the database.
 - **Message Queues:** Use message queues to make review creation faster, more scalable and resilient.
-- **Indexing:** Create indexes in both Postgres and MongoDB to improve the performance of aggregations.
+- **Horizontal/Vertical Scaling** Increase the number of instances or resources to handle more requests.
 - **Increase connection pool:** Increase the connection pool size to handle more concurrent requests.
+- **More Indexes in the Database:** Add more indexes to improve queries performance.
