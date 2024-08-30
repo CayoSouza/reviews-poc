@@ -120,6 +120,12 @@ Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite 
 
 
 ## Extra Performance Measurements (after restaurant indexes + 10M+ rows in the database)
+### Improvements: 
+- restaurantId index in both databases; 
+- connection pool increased to 200;
+- MongoDB using database aggregation instead of memory calculation.
+### Data changes:
+- +10M reviews (which makes searching by restaurantId more expensive, hence the need of the index);
 
 ### 1M reviews latency
 
