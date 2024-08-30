@@ -119,7 +119,7 @@ Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite 
 ```
 
 
-## Extra Performance Measurements (after restaurant indexes + more 10M+ rows of data in the database)
+## Extra Performance Measurements (after restaurant indexes + 10M+ rows in the database)
 
 ### 1M reviews latency
 
