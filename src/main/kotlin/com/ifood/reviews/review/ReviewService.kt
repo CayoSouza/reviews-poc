@@ -1,39 +1,63 @@
-package com.ifood.reviews.review
+package com.ifood.reviews.review.service
 
+import com.ifood.reviews.review.model.MongoReview
+import com.ifood.reviews.review.model.Review
+import com.ifood.reviews.review.model.ReviewDTO
+import com.ifood.reviews.review.repository.PostgresReviewRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.aggregation.Aggregation.*
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
+
 @Service
 class ReviewService(
-    private val reviewRepository: ReviewRepository,
+    private val postgresReviewRepository: PostgresReviewRepository,
     private val mongoTemplate: MongoTemplate
 ) {
 
     private val logger = LoggerFactory.getLogger(ReviewService::class.java)
 
     @Transactional
-    suspend fun createReview(review: Review): Review = withContext(Dispatchers.IO) {
-        reviewRepository.findByOrderId(review.orderId).ifPresent {
-            throw IllegalArgumentException("Order has already been reviewed")
-        }
+    suspend fun createReview(reviewDTO: ReviewDTO): Review = withContext(Dispatchers.IO) {
+        try {
+            postgresReviewRepository.findByOrderId(reviewDTO.orderId).ifPresent {
+                throw IllegalArgumentException("Order has already been reviewed")
+            }
 
-        val savedReview = reviewRepository.save(review).also {
-            logger.info("Review saved successfully in PostgreSQL with reviewId: ${it.reviewId}")
-        }
+            val review = reviewDTO.toEntity()
+            val savedReview = postgresReviewRepository.save(review).also {
+                logger.info("Review saved successfully in PostgreSQL with reviewId: ${it.reviewId}")
+            }
 
-        mongoTemplate.save(savedReview).also {
-            logger.info("Review saved successfully in MongoDB with reviewId: ${it.reviewId}")
-        }
+            val mongoReview = MongoReview(
+                reviewId = savedReview.reviewId?.toString(),
+                orderId = review.orderId.toString(),
+                userId = review.userId.toString(),
+                restaurantId = review.restaurantId.toString(),
+                stars = savedReview.stars,
+                comment = savedReview.comment,
+                date = savedReview.date
+            )
 
-        savedReview
+            mongoTemplate.save(mongoReview).also {
+                logger.info("Review saved successfully in MongoDB with reviewId: ${it.reviewId}")
+            }
+
+            return@withContext savedReview
+        } catch (e: Exception) {
+            logger.error("Error creating review: ${e.message}", e)
+            throw e
+        }
     }
 
     suspend fun calculateAverageStars(restaurantId: UUID, useNoSql: Boolean): Double = withContext(Dispatchers.IO) {
@@ -41,63 +65,91 @@ class ReviewService(
         else calculateAverageStarsPostgres(restaurantId)
     }
 
-
     private fun calculateAverageStarsMongo(restaurantId: UUID): Double {
         logger.info("Calculating average in MongoDB for restaurantId: $restaurantId")
-        val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
-        val reviews = mongoTemplate.find(query, Review::class.java)
-        val totalStars = reviews.sumOf { it.stars }
-        return if (reviews.isNotEmpty()) totalStars.toDouble() / reviews.size else 0.0
+
+        val matchOperation = match(Criteria.where("restaurantId").`is`(restaurantId.toString()))
+        val groupOperation = group().avg("stars").`as`("averageStars")
+        val aggregation = newAggregation(matchOperation, groupOperation)
+
+        val result = mongoTemplate.aggregate(aggregation, MongoReview::class.java, AverageStarsResult::class.java)
+        return result.mappedResults.firstOrNull()?.averageStars ?: 0.0
     }
 
     private fun calculateAverageStarsPostgres(restaurantId: UUID): Double {
         logger.info("Calculating average in PostgreSQL for restaurantId: $restaurantId")
-        return reviewRepository.calculateAverageStarsPostgres(restaurantId) ?: 0.0
+        return postgresReviewRepository.calculateAverageStarsPostgres(restaurantId) ?: 0.0
     }
 
-//    suspend fun calculateAverageStars(restaurantId: UUID): Double = withContext(Dispatchers.IO) {
-//        val query = org.springframework.data.mongodb.core.query.Query(org.springframework.data.mongodb.core.query.Criteria.where("restaurantId").`is`(restaurantId))
-//        val reviews = mongoTemplate.find(query, Review::class.java)
-//        val totalStars = reviews.sumOf { it.stars }
-//        if (reviews.isNotEmpty()) totalStars.toDouble() / reviews.size else 0.0
-//    }
-
-    suspend fun getReviewById(reviewId: UUID): Review? = withContext(Dispatchers.IO) {
-        reviewRepository.findById(reviewId).orElse(null)
-    }
-
-    suspend fun getReviewByOrderId(orderId: UUID): Review? {
-        return withContext(Dispatchers.IO) {
-            reviewRepository.findByOrderId(orderId)
-        }.orElse(null)
+    suspend fun getReviewByOrderId(orderId: UUID): Review? = withContext(Dispatchers.IO) {
+        postgresReviewRepository.findByOrderId(orderId).orElse(null)
     }
 
     suspend fun getReviewsByRestaurantId(restaurantId: UUID, page: Int, size: Int): List<Review> = withContext(Dispatchers.IO) {
         val pageable = PageRequest.of(page, size)
-        reviewRepository.findPaginatedByRestaurantId(restaurantId, pageable)
+        postgresReviewRepository.findPaginatedByRestaurantId(restaurantId, pageable)
     }
 
-    fun countReviewsByRestaurantId(restaurantId: UUID): Long {
-        val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
-        return mongoTemplate.count(query, Review::class.java)
-    }
-
-    suspend fun countReviewsByRestaurantId(restaurantId: UUID, useNoSql: Boolean): Long {
-        return if (useNoSql) {
-            countReviewsByRestaurantIdMongo(restaurantId)
-        } else {
-            countReviewsByRestaurantIdPostgres(restaurantId)
-        }
+    suspend fun countReviewsByRestaurantId(restaurantId: UUID, useNoSql: Boolean): Long = withContext(Dispatchers.IO) {
+        if (useNoSql) countReviewsByRestaurantIdMongo(restaurantId)
+        else countReviewsByRestaurantIdPostgres(restaurantId)
     }
 
     private fun countReviewsByRestaurantIdMongo(restaurantId: UUID): Long {
-        logger.info("Calculating count in MongoDB for restaurantId: $restaurantId")
-        val query = Query(Criteria.where("restaurantId").`is`(restaurantId))
-        return mongoTemplate.count(query, Review::class.java)
+        val query = Query(Criteria.where("restaurantId").`is`(restaurantId.toString()))
+        return mongoTemplate.count(query, MongoReview::class.java)
     }
 
     private fun countReviewsByRestaurantIdPostgres(restaurantId: UUID): Long {
-        logger.info("Calculating count in PostgreSQL for restaurantId: $restaurantId")
-        return reviewRepository.countReviewsByRestaurantId(restaurantId)
+        return postgresReviewRepository.countReviewsByRestaurantId(restaurantId)
     }
+
+    data class AverageStarsResult(val averageStars: Double)
+
+    @Transactional
+    fun generateFakeReviews(restaurantId: UUID, numberOfReviews: Int) {
+        runBlocking {
+            val batchSize = 500 // Adjust batch size as needed
+            val batches = numberOfReviews / batchSize
+
+            // Parallel processing using coroutines
+            val jobs = List(batches) { batch ->
+                launch(Dispatchers.IO) {
+                    val reviews = mutableListOf<Review>()
+                    val mongoReviews = mutableListOf<MongoReview>()
+                    repeat(batchSize) {
+                        val review = Review(
+                            orderId = UUID.randomUUID(),
+                            userId = UUID.randomUUID(),
+                            restaurantId = restaurantId,
+                            stars = (1..5).random(),
+                            comment = "Random review",
+                            date = Date()
+                        )
+                        reviews.add(review)
+
+                        val mongoReview = MongoReview(
+                            reviewId = review.reviewId.toString(),
+                            orderId = review.orderId.toString(),
+                            userId = review.userId.toString(),
+                            restaurantId = review.restaurantId.toString(),
+                            stars = review.stars,
+                            comment = review.comment,
+                            date = review.date
+                        )
+                        mongoReviews.add(mongoReview)
+                    }
+
+                    // Batch insert into PostgreSQL
+                    postgresReviewRepository.saveAll(reviews)
+
+                    // Batch insert into MongoDB
+                    mongoTemplate.insertAll(mongoReviews)
+                }
+            }
+            jobs.forEach { it.join() } // Wait for all coroutines to complete
+        }
+    }
+
+
 }

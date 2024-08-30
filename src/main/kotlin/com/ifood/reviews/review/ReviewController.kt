@@ -1,6 +1,10 @@
-package com.ifood.reviews.review
+package com.ifood.reviews.review.controller
 
+import com.ifood.reviews.review.model.Review
+import com.ifood.reviews.review.model.ReviewDTO
+import com.ifood.reviews.review.service.ReviewService
 import jakarta.validation.Valid
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,9 +21,9 @@ class ReviewController(
 
     // Create a new review
     @PostMapping
-    suspend fun createReview(@Valid @RequestBody review: Review): ResponseEntity<Review> {
+    suspend fun createReview(@Valid @RequestBody reviewDTO: ReviewDTO): ResponseEntity<Review> {
         logger.info("Received request to create review")
-        val savedReview = reviewService.createReview(review)
+        val savedReview = reviewService.createReview(reviewDTO)
         val location = URI.create("/api/reviews/${savedReview.reviewId}")
         return ResponseEntity.created(location).body(savedReview)
     }
@@ -27,7 +31,7 @@ class ReviewController(
     // Get a review by orderId
     @GetMapping("/order/{orderId}")
     suspend fun getReviewByOrderId(@PathVariable orderId: UUID): ResponseEntity<Review?> {
-        logger.info("[PostgresSQL] Received request to get review for orderId: $orderId")
+        logger.info("[PostgreSQL] Received request to get review for orderId: $orderId")
         val review = reviewService.getReviewByOrderId(orderId)
         return if (review != null) {
             ResponseEntity.ok(review)
@@ -70,5 +74,19 @@ class ReviewController(
         logger.info("$dataSource Received request to count reviews for restaurantId: $restaurantId")
         val count = reviewService.countReviewsByRestaurantId(restaurantId, useNoSql)
         return ResponseEntity.ok(count)
+    }
+
+    @PostMapping("/generate")
+    suspend fun generateFakeReviews(
+        @RequestParam restaurantId: UUID,
+        @RequestParam numberOfReviews: Int
+    ): ResponseEntity<Map<String, Any>> = runBlocking {
+        reviewService.generateFakeReviews(restaurantId, numberOfReviews)
+        val response = mapOf(
+            "message" to "Successfully generated $numberOfReviews reviews for restaurant $restaurantId",
+            "restaurantId" to restaurantId,
+            "numberOfReviews" to numberOfReviews
+        )
+        ResponseEntity.ok(response)
     }
 }
