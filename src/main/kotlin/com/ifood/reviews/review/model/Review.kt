@@ -1,6 +1,7 @@
 package com.ifood.reviews.review.model
 
 import jakarta.persistence.*
+import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
 
@@ -49,6 +50,8 @@ data class MongoReview(
 
     val orderId: String,
     val userId: String,
+
+    @Indexed
     val restaurantId: String,
     val stars: Int,
     val comment: String? = null,
