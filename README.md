@@ -96,7 +96,7 @@ image: postgres:16.2
 Core i5-13600KF
 Memory Limit: 15.54GiB
 RTX 4070 Ti
-Potenciais gargalos do sistema: mais de 150 usuarios em concorrencia por limite de pool de conexoes (scaling horizontal e/ou vertical necessario)
+Potenciais gargalos do sistema: mais de 200 usuarios em concorrencia por limite de CPU (atingiu 100%, scaling horizontal e/ou vertical necessario)
 ```
 
 [50-100-200VUs - get_review](k6/200VUs/getReview-summary2-e3b0c442-98fc-1fc1-9fd3-256e9df06d05.html)
