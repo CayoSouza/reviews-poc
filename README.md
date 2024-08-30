@@ -2,6 +2,10 @@
 
 This project provides a backend service for managing and aggregating user reviews for restaurants with the objective to measure database level aggregations (average). The service supports creating reviews, retrieving them, and calculating the average rating for a specific restaurant. The system is built using Kotlin, Spring Boot, PostgreSQL, and MongoDB.
 
+## Branches
+
+[before-improvements](https://github.com/CayoSouza/reviews-poc/tree/save/before-improvements)
+
 ## Architecture Diagram
 
 ![Architecture Diagram](imgs/architecture.png)
